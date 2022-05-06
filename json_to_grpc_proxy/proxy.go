@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"net/http"
 
 	proto "grpc/proto"
 
@@ -27,18 +27,25 @@ func (p ProxyRouter) connectToSumService(g *gin.Context) {
 	g.BindJSON(&info)
 	a := info.A
 	b := info.B
-	fmt.Println(a, b)
+	// 起代理會打不到～地址也要改一下喔喔喔喔喔
 	conn, err := grpc.Dial("127.0.0.1:50052", grpc.WithInsecure())
 	if err != nil {
-		fmt.Println(err)
+		g.JSON(http.StatusOK, gin.H{
+			"error": err,
+		})
 	}
 	defer conn.Close()
 	client := proto.NewSumServiceClient(conn)
-	result, err := client.Sum(context.Background(), &proto.SumRequest{A: 2, B: 1})
+	result, err := client.Sum(context.Background(), &proto.SumRequest{A: a, B: b})
 	if err != nil {
-		fmt.Println(err)
+		g.JSON(http.StatusOK, gin.H{
+			"error": err,
+		})
+	} else {
+		g.JSON(http.StatusOK, gin.H{
+			"result": result,
+		})
 	}
-	fmt.Println(result)
 }
 
 func main() {
